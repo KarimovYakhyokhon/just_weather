@@ -22,6 +22,18 @@ class TemperatureInfo {
   }
 }
 
+class WindInfo{
+  final double wind;
+
+  WindInfo({this.wind});
+
+  factory WindInfo.fromJson(Map<String , dynamic> json) {
+    final wind = json['wind'];
+    return WindInfo(wind: wind);
+  }
+}
+
+
 class WeatherResponse {
   final String cityName;
   final TemperatureInfo tempInfo;
@@ -44,6 +56,8 @@ class WeatherResponse {
     final tempInfoJson = json['main'];
     final tempInfo = TemperatureInfo.fromJson(tempInfoJson);
 
+    final windInfoJson = json['wind'];
+    final windInfo = WindInfo.fromJson(windInfoJson);
 
     final weatherInfoJson = json['weather'][0];
     final weatherInfo = WeatherInfo.fromJson(weatherInfoJson);
@@ -51,7 +65,7 @@ class WeatherResponse {
     return WeatherResponse(
         cityName: cityName,
         tempInfo: tempInfo,
-        weatherInfo: weatherInfo);
+        weatherInfo: weatherInfo,);
   }
 }
 

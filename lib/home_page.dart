@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:just_weather/colors.dart';
@@ -11,6 +13,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  var temperature = List(7);
+  var description = List(7);
+
+  String locationApiUrl = 'https://www.metaweather.com/api/location/';
 
   final _cityTextController = TextEditingController();
   final _dataService = DataService();
@@ -35,7 +41,7 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-            icon: Icon(Icons.notifications, color: kTextColor),
+            icon: Icon(Icons.more_vert_outlined  , color: kTextColor),
             onPressed: () {})
       ],
     );
@@ -99,6 +105,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  @override
+  void initState() {
+    super.initState();
+    fetchLocationDay();
+  }
+
+  void fetchLocationDay() async {
+    var today = DateTime.now();
+    for (var i = 0; i < 7; i++) {
+      var locationDayResult = await http.get(locationApiUrl +
+          '/' +
+           DateFormat('y/M/d')
+              .format(today.add(Duration(days: i + 1)))
+              .toString());
+      var result = json.decode(locationDayResult.body);
+      var data = result[0];
+
+      setState(() {
+        temperature[i] = data["temp"].round();
+        description[i] = data["weather"].round();
+      });
+    }
+  }
+
   weatherContainer() {
     return Padding(
         padding: const EdgeInsets.only(top: 20),
@@ -131,7 +161,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          '${_response.tempInfo.temperature}°C',
+                          '${_response.tempInfo.temperature}°F',
                           style: TextStyle(fontSize: 35, color: kWhiteColor),
                         ),
                       ],
@@ -151,14 +181,31 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: appBar(),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            textFormField(),
-            if (_response != null) weatherContainer(),
-            next7Days(),
-          ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              textFormField(),
+              if (_response != null) weatherContainer(),
+              next7Days(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Container(
+                  child: Row(
+                    children: <Widget>[
+                      for (var i = 0; i < 7; i++)
+                        forecastElement(
+                            i + 1,
+                           temperature[i],
+                           description[i],
+                        )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -174,4 +221,36 @@ class _HomePageState extends State<HomePage> {
         "https://www.accuweather.com/en/uz/tashkent/351199/april-weather/351199";
     launch(url1);
   }
+}
+Widget forecastElement(daysFromNow, temperature, description) {
+  var now = DateTime.now();
+  var oneDayFromNow = now.add(Duration(days: daysFromNow));
+   //WeatherResponse _response;
+  return Padding(
+    padding: const EdgeInsets.only(left: 16.0,top: 10,bottom: 10),
+    child: Container(
+      height: 190,
+      width: 150,
+      decoration: BoxDecoration(
+          color: Colors.green.shade300,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black12,blurRadius: 3,spreadRadius: 1)]
+      ),
+      child: Column(
+        children: [
+          Text(DateFormat.E().format(oneDayFromNow),
+            style: TextStyle(color: kWhiteColor, fontSize: 25),
+          ),
+          Text(DateFormat.MMMd().format(oneDayFromNow),
+            style: TextStyle(color:kWhiteColor, fontSize: 25),),
+           //Image.network(_response.iconUrl),
+          SizedBox(height: 20),
+          Icon(Icons.cloud,size: 40,color: kWhiteColor,),
+          SizedBox(height: 20,),
+          Text('78.67' + '°F',style: TextStyle(fontSize: 20,color: kWhiteColor),),
+          Text('broken clouds',style: TextStyle(fontSize: 17, color: kWhiteColor),),
+        ],
+      ),
+    ),
+  );
 }

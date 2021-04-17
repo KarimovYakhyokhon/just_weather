@@ -29,3 +29,5 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+//keytool -genkey -v -keystore c:\Users\innovation\key.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias key
